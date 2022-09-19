@@ -1,5 +1,5 @@
 {
-  "name": "image-mesh",
+  "name": "image-mesh-server",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
@@ -7,17 +7,9 @@
     "start": "node server/index.js",
     "build": "cd client && npm install && npm run build"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/eric6cho/spotify-profile.git"
-  },
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/eric6cho/spotify-profile/issues"
-  },
-  "homepage": "https://github.com/eric6cho/spotify-profile#readme",
   "dependencies": {
     "axios": "^0.27.2",
     "dotenv": "^16.0.2",

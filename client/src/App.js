@@ -138,6 +138,8 @@ export default function App() {
       '&brightness='+qBrightness+'&contrast='+qContrast+'&pixelation='+
       qPixelation+'&isPixelated='+qIsPixelated+'&isSquare='+qIsSquare;
 
+
+      console.log(apiURL)
     fetchGet(apiURL).then(data=>setImage(data['src']));
   };
 
