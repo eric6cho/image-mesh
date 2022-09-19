@@ -5,11 +5,18 @@ const fs = require('fs');
 const path = require('path');
 const app = express();
 const port =  process.env.PORT || 8888;
-const serverPath = 'http://localhost:'+port+'/'; // possibly change
-//const serverPath = (process.env.HOST||('http://localhost:'+port))+'/'; // possibly change
+//const serverPath = __dirname+'/../public/';
+//const serverPath = 'http://localhost:'+port+'/'; // works local
+
+const serverPath = '/'; 
+
+console.log(process.env.HOST);
 
 app.use(express.json());
-app.use(express.static(path.resolve(__dirname, '../client/build'))); 
+//app.use(express.static(path.resolve(__dirname, '../client/build'))); 
+
+app.use(express.static(path.resolve(__dirname, '../public/'))); //works local
+//app.use(express.static('public'));
 
 const validateNum = (val,defaultVal,minVal,maxVal) => {
   val = parseFloat(val);
@@ -136,7 +143,6 @@ const formatDate = date => {
   return [year,month,day,minutes].join('-');
 };
 
-app.use(express.static('public'));
 
 app.get('/', (req, res) => res.json({message:'This one doesnt return anything. Try something else',}));
 
