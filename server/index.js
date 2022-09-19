@@ -3,8 +3,8 @@ const express = require('express');
 const Jimp = require('jimp');
 const fs = require('fs');
 const app = express();
-const port = 8888;
-const serverPath = 'http://localhost:'+port+'/';
+const port =  process.env.PORT || 8888;
+const serverPath = 'http://localhost:'+port+'/'; // possibly change
 
 const validateNum = (val,defaultVal,minVal,maxVal) => {
   val = parseFloat(val);
@@ -195,4 +195,4 @@ app.get('/get/image/edited',(req,res)=>{
   getImageData(url,file,params).then(data => res.json(data));
 });
 
-app.listen(port, () => console.log(`Express app listening at http://localhost:${port}`));
+app.listen(port, () => console.log("App is running on port " + port));
