@@ -261,7 +261,7 @@ export default function App() {
           <div className="link-list-container">
             <h3>Sample Image Links</h3>
             <div className="link-list">
-              {sampleURLs.map((url,i)=><div key={i} className='button link-button' onClick={()=>setImageURL(url)}><img src={url} alt={'icon'}/><p>{url}</p></div>)}
+              {sampleURLs.map((url,i)=><div key={i} className='button link-button' onClick={()=>setImageURL(url)}><p>{url}</p></div>)}
             </div>
           </div>
         </div>
