@@ -4,7 +4,7 @@ const Jimp = require('jimp');
 const fs = require('fs');
 const app = express();
 const port =  process.env.PORT || 8888;
-const serverPath = 'http://localhost:'+port+'/'; // possibly change
+const serverPath = (process.env.HOST||('http://localhost:'+port))+'/'; // possibly change
 
 const validateNum = (val,defaultVal,minVal,maxVal) => {
   val = parseFloat(val);
