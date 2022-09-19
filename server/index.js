@@ -2,10 +2,14 @@ require('dotenv').config();
 const express = require('express');
 const Jimp = require('jimp');
 const fs = require('fs');
+const path = require('path');
 const app = express();
 const port =  process.env.PORT || 8888;
 const serverPath = 'http://localhost:'+port+'/'; // possibly change
 //const serverPath = (process.env.HOST||('http://localhost:'+port))+'/'; // possibly change
+
+app.use(express.json());
+app.use(express.static(path.resolve(__dirname, '../client/build'))); 
 
 const validateNum = (val,defaultVal,minVal,maxVal) => {
   val = parseFloat(val);
