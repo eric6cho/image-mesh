@@ -142,11 +142,11 @@ const formatDate = date => {
   return [year,month,day,minutes].join('-');
 };
 
-app.get('/image-mesh/api/', (req, res) => res.json({message:'This one doesnt return anything. Try something else',}));
+app.get('/api/image-mesh/', (req, res) => res.json({message:'This one doesnt return anything. Try something else',}));
 
-app.get('/image-mesh/api/get/params/',(req,res) => res.json(getParams()));
+app.get('/api/image-mesh/get/params/',(req,res) => res.json(getParams()));
 
-app.get('/image-mesh/api/get/image',(req,res) => {
+app.get('/api/image-mesh/get/image',(req,res) => {
   let url = validateURL(req.query.url);
   let file = getRandomFileName();
   let params = getParams();
@@ -160,7 +160,7 @@ app.get('/image-mesh/api/get/image',(req,res) => {
   getImageData(url,file,params).then(data => res.json(data));
 });
 
-app.get('/image-mesh/api/get/image/square',(req,res) => {
+app.get('/api/image-mesh/get/image/square',(req,res) => {
   let url = validateURL(req.query.url);
   let file = getRandomFileName();
   let params = getParams();
@@ -173,7 +173,7 @@ app.get('/image-mesh/api/get/image/square',(req,res) => {
   getImageData(url,file,params).then(data => res.json(data));
 });
 
-app.get('/image-mesh/api/get/image/pixelate',(req,res) => {
+app.get('/api/image-mesh/get/image/pixelate',(req,res) => {
   let url = validateURL(req.query.url);
   let file = getRandomFileName();
   let params = getParams();
@@ -185,7 +185,7 @@ app.get('/image-mesh/api/get/image/pixelate',(req,res) => {
   getImageData(url,file,params).then(data => res.json(data));
 });
 
-app.get('/image-mesh/api/get/image/edited',(req,res)=>{
+app.get('/api/image-mesh/get/image/edited',(req,res)=>{
   let url = validateURL(req.query.url);
   let file = getRandomFileName();
   let params = getParams();
