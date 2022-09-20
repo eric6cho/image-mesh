@@ -4,18 +4,12 @@ const Jimp = require('jimp');
 const fs = require('fs');
 const path = require('path');
 const app = express();
-const port =  process.env.PORT || 8888;
-//const serverPath = __dirname+'/../public/';
-//const serverPath = 'http://localhost:'+port+'/'; // works local
-
-const serverPath = '/'; 
-const baseAPIPath = '/image-mesh/api';
+const port =  process.env.PORT || 5000;
+const SERVERAPI = '/image-mesh/api';
 
 app.use(express.json());
-//app.use(express.static(path.resolve(__dirname, '../client/build'))); 
 
-app.use(express.static(path.resolve(__dirname, '../public/'))); //works local
-//app.use(express.static('public'));
+app.use(express.static(path.resolve(__dirname, '../public/'))); 
 
 const validateNum = (val,defaultVal,minVal,maxVal) => {
   val = parseFloat(val);
@@ -49,7 +43,7 @@ const getImageData = async (url,file,params) => new Promise(resolve =>
 
     const data = {
       'url':url,
-      'src':serverPath+file,
+      'src':'/'+file,
       'file':file,
     };
 
@@ -142,15 +136,15 @@ const formatDate = date => {
   return [year,month,day,minutes].join('-');
 };
 
-const defaultMessage = 'API calls will use this path format:'+baseAPIPath+'. Example: '+baseAPIPath+'/get/params';
+const defaultMessage = 'API calls will use this path format:'+SERVERAPI+'. Example: '+SERVERAPI+'/get/params';
 
 app.get('/', (req, res) => res.json({message:defaultMessage,}));
 
-app.get(baseAPIPath, (req, res) => res.json({message:defaultMessage,}));
+app.get(SERVERAPI, (req, res) => res.json({message:defaultMessage,}));
 
-app.get(baseAPIPath+'/get/params/',(req,res) => res.json(getParams()));
+app.get(SERVERAPI+'/get/params/',(req,res) => res.json(getParams()));
 
-app.get(baseAPIPath+'/get/image',(req,res) => {
+app.get(SERVERAPI+'/get/image',(req,res) => {
   let url = validateURL(req.query.url);
   let file = getRandomFileName();
   let params = getParams();
@@ -164,7 +158,7 @@ app.get(baseAPIPath+'/get/image',(req,res) => {
   getImageData(url,file,params).then(data => res.json(data));
 });
 
-app.get(baseAPIPath+'/get/image/square',(req,res) => {
+app.get(SERVERAPI+'/get/image/square',(req,res) => {
   let url = validateURL(req.query.url);
   let file = getRandomFileName();
   let params = getParams();
@@ -177,7 +171,7 @@ app.get(baseAPIPath+'/get/image/square',(req,res) => {
   getImageData(url,file,params).then(data => res.json(data));
 });
 
-app.get(baseAPIPath+'/get/image/pixelate',(req,res) => {
+app.get(SERVERAPI+'/get/image/pixelate',(req,res) => {
   let url = validateURL(req.query.url);
   let file = getRandomFileName();
   let params = getParams();
@@ -189,7 +183,7 @@ app.get(baseAPIPath+'/get/image/pixelate',(req,res) => {
   getImageData(url,file,params).then(data => res.json(data));
 });
 
-app.get(baseAPIPath+'/get/image/edited',(req,res)=>{
+app.get(SERVERAPI+'/get/image/edited',(req,res)=>{
   let url = validateURL(req.query.url);
   let file = getRandomFileName();
   let params = getParams();
