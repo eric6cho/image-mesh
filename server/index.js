@@ -5,6 +5,7 @@ const fs = require('fs');
 const path = require('path');
 const app = express();
 const port =  process.env.PORT || 5000;
+const HOST = process.env.PORT ? 'https://image-mesh-server.herokuapp.com':'http://localhost:'+port;
 const SERVERAPI = '/image-mesh/api';
 
 app.use(express.json());
@@ -43,7 +44,7 @@ const getImageData = async (url,file,params) => new Promise(resolve =>
 
     const data = {
       'url':url,
-      'src':'/'+file,
+      'src':HOST+'/'+file,
       'file':file,
     };
 
@@ -108,7 +109,7 @@ const filterImage = (image,params) =>{
     x>0: increase contrast as expected
     x<0: decrease contrast as expected
   */
- 
+
   let hue = params['hue'];
   let sat = params['saturation'];
   let gli = adjustParamGlitch(params['glitch']);
@@ -180,6 +181,8 @@ const defaultMessage = 'API calls will use this path format:'+SERVERAPI+'. Examp
 app.get('/', (req, res) => res.json({message:defaultMessage,}));
 
 app.get(SERVERAPI, (req, res) => res.json({message:defaultMessage,}));
+
+app.get(SERVERAPI+'/get/host', (req, res) => res.json({'url':HOST}));
 
 app.get(SERVERAPI+'/get/params/',(req,res) => res.json(getParams()));
 
