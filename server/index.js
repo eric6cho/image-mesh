@@ -55,12 +55,17 @@ const getParams = () => ({
   'hue':5,
   'saturation':20,
   'brightness':0,
-  'contrast':-0.2,
+  'contrast':-20,
+  'glitch':0,
   'pixelation':16,
   'isPixelated':true,
   'isSquare':true,
   'isFilter':true,
 });
+
+const adjustParamGlitch = val => val*-1;
+
+const adjustParamContrast = val => val/100;
 
 const getImageFromURL = async url => await Jimp.read(url);
 
@@ -80,12 +85,46 @@ const resizeImage = (image,newHeight) => {
 const pixelateImage = (image,params) => 
   image.pixelate(image.bitmap.height/params['pixelation']);
 
-const filterImage = (image,params) =>
-  image = image
-    .color([{apply:'hue', params: [params['hue']]}])
-    .color([{apply:'saturate', params: [params['saturation']]}])
-    .color([{apply:'tint', params: [params['brightness']]}])
-    .contrast(params['contrast']);
+const filterImage = (image,params) =>{    
+  /*
+    NOTES
+
+    HUE: Spin the hue by a given amount
+    x!=0: spin hue as expected
+
+    TINT: apply mix with white color
+    x>0: lighten image but also adds white. Use this for brightness param when >0
+    x<0: destroys the colors of the image. Use this for glitch param
+
+    LIGHTEN: lightens the color of the image by a given amount
+    x>0: makes the image lighter but worse than tint. Use TINT instead
+    x<0: darkens image. Use this for brightness param when <0
+
+    SATURATE: saturate color by a given amount
+    x>0: increases saturation as expected
+    x<0: decrease saturation as expected
+
+    CONTRAST: increase/decrease contrast of color
+    x>0: increase contrast as expected
+    x<0: decrease contrast as expected
+  */
+ 
+  let hue = params['hue'];
+  let sat = params['saturation'];
+  let gli = adjustParamGlitch(params['glitch']);
+  let bri = params['brightness'];
+  let con = adjustParamContrast(params['contrast']);
+
+  let brightness = (bri>=0?'tint':'lighten') // tint and lighten work well for birghtness depending on value
+  
+  image = image.color([{apply:'hue', params: [hue]}]);        // change hues of colors
+  image = image.color([{apply:'saturate', params: [sat]}]);   // de/saturate colors
+  image = image.color([{apply:'tint', params: [gli]}]);       // glitch colors
+  image = image.color([{apply:brightness, params: [bri]}]);   // change brightness
+  image = image.contrast(con);                                // change contrast
+
+  return image;
+};
 
 const writeImageToFile = (image,path) => image.write(path);
 
@@ -193,7 +232,8 @@ app.get(SERVERAPI+'/get/image/edited',(req,res)=>{
   params['hue'] = validateNum(req.query.hue,params['hue'],-100,100);
   params['saturation'] = validateNum(req.query.saturation,params['saturation'],-100,100);
   params['brightness'] = validateNum(req.query.brightness,params['brightness'],-100,100);
-  params['contrast'] = validateNum(req.query.contrast,params['contrast'],-1,1);
+  params['contrast'] = validateNum(req.query.contrast,params['contrast'],-100,100);
+  params['glitch'] = validateNum(req.query.glitch,params['glitch'],0,100);
   params['pixelation'] = validateNum(req.query.pixelation,params['pixelation'],0,100);
   params['isSquare'] = validateBool(req.query.isSquare,params['isSquare']);
   params['isPixelated'] = validateBool(req.query.isPixelated,params['isPixelated']);
