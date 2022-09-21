@@ -3,14 +3,147 @@ const express = require('express');
 const Jimp = require('jimp');
 const fs = require('fs');
 const path = require('path');
+const { getPaletteFromURL } = require('color-thief-node');
 const app = express();
+
 const port =  process.env.PORT || 5000;
 const HOST = process.env.PORT ? 'https://image-mesh-server.herokuapp.com':'http://localhost:'+port;
 const SERVERAPI = '/image-mesh/api';
+const defaultMessage = 'API calls will use this path format:'+SERVERAPI+'. Example: '+SERVERAPI+'/get/params';
 
 app.use(express.json());
 
 app.use(express.static(path.resolve(__dirname, '../public/'))); 
+
+app.get('/', (req, res) => res.json({message:defaultMessage,}));
+
+app.get(SERVERAPI, (req, res) => res.json({message:defaultMessage,}));
+
+app.get(SERVERAPI+'/get/host', (req, res) => res.json({'url':HOST}));
+
+app.get(SERVERAPI+'/get/params/',(req,res) => res.json(getParams()));
+
+app.get(SERVERAPI+'/get/palette',(req,res) => {
+  let url = validateURL(req.query.url);
+
+  if(!url) res.json({'message':'url is not valid'});
+
+  getPaletteData(url).then(data=>res.json(data));
+});
+
+app.get(SERVERAPI+'/get/gradient',(req,res) => {
+  let url = validateURL(req.query.url);
+
+  if(!url) res.json({'message':'url is not valid'});
+
+  getPaletteData(url).then(data=>res.json(data));
+});
+
+app.get(SERVERAPI+'/get/image',(req,res) => {
+  let url = validateURL(req.query.url);
+  let file = getRandomFileName();
+  let params = getParams();
+
+  if(!url) res.json({'message':'url is not valid'});
+
+  params['isPixelated'] = false;
+  params['isSquare'] = false;
+  params['isFilter'] = false;
+
+  getImageData(url,file,params).then(data => res.json(data));
+});
+
+app.get(SERVERAPI+'/get/image/square',(req,res) => {
+  let url = validateURL(req.query.url);
+  let file = getRandomFileName();
+  let params = getParams();
+
+  if(!url) res.json({'message':'url is not valid'});
+
+  params['isPixelated'] = false;
+  params['isFilter'] = false;
+
+  getImageData(url,file,params).then(data => res.json(data));
+});
+
+app.get(SERVERAPI+'/get/image/pixelate',(req,res) => {
+  let url = validateURL(req.query.url);
+  let file = getRandomFileName();
+  let params = getParams();
+
+  if(!url) res.json({'message':'url is not valid'});
+
+  params['isFilter'] = false;
+
+  getImageData(url,file,params).then(data => res.json(data));
+});
+
+app.get(SERVERAPI+'/get/image/edited',(req,res)=>{
+  let url = validateURL(req.query.url);
+  let file = getRandomFileName();
+  let params = getParams();
+
+  if(!url) res.json({'message':'url is not valid'});
+
+  params['hue'] = validateNum(req.query.hue,params['hue'],-100,100);
+  params['saturation'] = validateNum(req.query.saturation,params['saturation'],-100,100);
+  params['brightness'] = validateNum(req.query.brightness,params['brightness'],-100,100);
+  params['contrast'] = validateNum(req.query.contrast,params['contrast'],-100,100);
+  params['glitch'] = validateNum(req.query.glitch,params['glitch'],0,100);
+  params['pixelation'] = validateNum(req.query.pixelation,params['pixelation'],0,100);
+  params['isSquare'] = validateBool(req.query.isSquare,params['isSquare']);
+  params['isPixelated'] = validateBool(req.query.isPixelated,params['isPixelated']);
+  params['isPixelated'] = params['isPixelated'] && params['pixelation']>0;
+
+  getImageData(url,file,params).then(data => res.json(data));
+});
+
+app.get(SERVERAPI+'/get/image/pixelMesh',(req,res)=>{
+  let url = validateURL(req.query.url);
+  let file = getRandomFileName();
+  let params = getParams();
+
+  if(!url) res.json({'message':'url is not valid'});
+
+  params['hue'] = validateNum(req.query.hue,params['hue'],-100,100);
+  params['saturation'] = validateNum(req.query.saturation,params['saturation'],-100,100);
+  params['brightness'] = validateNum(req.query.brightness,params['brightness'],-100,100);
+  params['contrast'] = validateNum(req.query.contrast,params['contrast'],-100,100);
+  params['glitch'] = validateNum(req.query.glitch,params['glitch'],0,100);
+  params['pixelation'] = validateNum(req.query.pixelation,params['pixelation'],0,100);
+  params['isSquare'] = validateBool(req.query.isSquare,params['isSquare']);
+  params['isPixelated'] = validateBool(req.query.isPixelated,params['isPixelated']);
+  params['isPixelated'] = params['isPixelated'] && params['pixelation']>0;
+  
+  params['isMesh'] = true;
+
+  getImageData(url,file,params).then(data => res.json(data));
+});
+
+app.get(SERVERAPI+'/get/image/pixelGradient',(req,res)=>{
+  let url = validateURL(req.query.url);
+  let file = getRandomFileName();
+  let params = getParams();
+
+  if(!url) res.json({'message':'url is not valid'});
+
+  params['hue'] = validateNum(req.query.hue,params['hue'],-100,100);
+  params['saturation'] = validateNum(req.query.saturation,params['saturation'],-100,100);
+  params['brightness'] = validateNum(req.query.brightness,params['brightness'],-100,100);
+  params['contrast'] = validateNum(req.query.contrast,params['contrast'],-100,100);
+  params['glitch'] = validateNum(req.query.glitch,params['glitch'],0,100);
+  params['pixelation'] = validateNum(req.query.pixelation,params['pixelation'],0,100);
+  params['isSquare'] = validateBool(req.query.isSquare,params['isSquare']);
+  params['isPixelated'] = validateBool(req.query.isPixelated,params['isPixelated']);
+  params['isPixelated'] = params['isPixelated'] && params['pixelation']>0;
+  
+  params['isMesh'] = true;
+  params['isGradient'] = true;
+
+  getImageData(url,file,params).then(data => res.json(data));
+});
+
+app.listen(port, () => console.log("App is running on port " + port));
 
 const validateNum = (val,defaultVal,minVal,maxVal) => {
   val = parseFloat(val);
@@ -28,8 +161,9 @@ const validateBool = (val,defaultVal) => {
 
 const validateURL = url => url.trim().length===0 ? null : url.trim();
 
-const getImageData = async (url,file,params) => new Promise(resolve => 
+const getImageData = async (url,file,params) => new Promise(resolve => {
   getImageFromURL(url).then(image => {
+    
     clearOldFiles();
 
     if(params['isSquare']) image = cropImageToSquare(image);
@@ -39,18 +173,74 @@ const getImageData = async (url,file,params) => new Promise(resolve =>
     image = resizeImage(image,256);
 
     if(params['isPixelated']) image = pixelateImage(image,params);
+
+    writeImageToFile(image,'public/'+file);
+    
+    let src = HOST+'/'+file;
+
+    getPaletteData(src).then(data=>{
+      
+      data['src']=src;
+      
+      if(!params['isMesh']) {
+            
+        resolve(data);
+      }
+      else{
+       
+        getImageMesh(url,getRandomFileName(),params,data['palette']).then(imageMeshSrc=>{
+
+          //writeImageToFile(image,'public/'+file);
+
+          data['src']=imageMeshSrc;
+          
+          resolve(data);
+
+        });
+      }
+
+
+    });
+  });
+});
+
+
+
+const getImageMesh = async (url,file,params,palette) => new Promise(resolve=>{
+  getImageFromURL(url).then(image => {
+    image = cropImageToSquare(image);
+    image = resizeImage(image,6); // higher num => higher complexity
+    
+    image.scan(0, 0, image.bitmap.width, image.bitmap.height, function(x, y, idx) {
+
+      
+      let i = Math.floor(Math.random() * palette.length);
+    
+      let paletteColor = palette[i];
+      
+      this.bitmap.data[idx + 0] = paletteColor[0]; // set r
+      this.bitmap.data[idx + 1] = paletteColor[1]; // set g
+      this.bitmap.data[idx + 2] = paletteColor[2]; // set b
+    });
+    
+
+    image = resizeImage(image,256);
+    image = image.blur(16);
+    
+    if(!params['isGradient'])image = pixelateImage(image,params);
+   
     
     writeImageToFile(image,'public/'+file);
 
-    const data = {
-      'url':url,
-      'src':HOST+'/'+file,
-      'file':file,
-    };
+    let src = HOST+'/'+file;
 
-    resolve(data);
-  })
-);
+    resolve(src);
+  });
+
+
+
+
+});
 
 const getParams = () => ({
   'hue':5,
@@ -62,6 +252,8 @@ const getParams = () => ({
   'isPixelated':true,
   'isSquare':true,
   'isFilter':true,
+  'isMesh':false,
+  'isGradient':false,
 });
 
 const adjustParamGlitch = val => val*-1;
@@ -141,6 +333,7 @@ const clearOldFiles = () => {
   let day = date.getDate(); 
   let minutes = date.getMinutes() + date.getHours()*60;
   let publicPath = './public/';
+  
   fs.readdir(publicPath, (err, files) => {
     if (err) return console.log('Error: ' + err);
     
@@ -176,73 +369,33 @@ const formatDate = date => {
   return [year,month,day,minutes].join('-');
 };
 
-const defaultMessage = 'API calls will use this path format:'+SERVERAPI+'. Example: '+SERVERAPI+'/get/params';
+const getPaletteData = async url => new Promise(resolve=>{
+  getPalette(url).then(palette=>{
+    let data = { 
+      'url':url,
+      'palette':palette,
+      'paletteStyles':getPaletteBackgroundStyles(palette),
+      'gradientStyle':getGradientBackgroundStyle(palette),
+    };
 
-app.get('/', (req, res) => res.json({message:defaultMessage,}));
-
-app.get(SERVERAPI, (req, res) => res.json({message:defaultMessage,}));
-
-app.get(SERVERAPI+'/get/host', (req, res) => res.json({'url':HOST}));
-
-app.get(SERVERAPI+'/get/params/',(req,res) => res.json(getParams()));
-
-app.get(SERVERAPI+'/get/image',(req,res) => {
-  let url = validateURL(req.query.url);
-  let file = getRandomFileName();
-  let params = getParams();
-
-  if(!url) res.json({'message':'url is not valid'});
-
-  params['isPixelated'] = false;
-  params['isSquare'] = false;
-  params['isFilter'] = false;
-
-  getImageData(url,file,params).then(data => res.json(data));
+    resolve(data);
+  });
 });
 
-app.get(SERVERAPI+'/get/image/square',(req,res) => {
-  let url = validateURL(req.query.url);
-  let file = getRandomFileName();
-  let params = getParams();
+const getPalette = async url => new Promise(resolve => 
+  resolve(getPaletteFromURL(url,9))); // params: url, numColors-1
 
-  if(!url) res.json({'message':'url is not valid'});
+const getPaletteBackgroundStyles = palette => (
+  palette.map(color=>({'background':'rgb('+color.join(',')+')'}))
+);
 
-  params['isPixelated'] = false;
-  params['isFilter'] = false;
-
-  getImageData(url,file,params).then(data => res.json(data));
-});
-
-app.get(SERVERAPI+'/get/image/pixelate',(req,res) => {
-  let url = validateURL(req.query.url);
-  let file = getRandomFileName();
-  let params = getParams();
-
-  if(!url) res.json({'message':'url is not valid'});
-
-  params['isFilter'] = false;
-
-  getImageData(url,file,params).then(data => res.json(data));
-});
-
-app.get(SERVERAPI+'/get/image/edited',(req,res)=>{
-  let url = validateURL(req.query.url);
-  let file = getRandomFileName();
-  let params = getParams();
-
-  if(!url) res.json({'message':'url is not valid'});
-
-  params['hue'] = validateNum(req.query.hue,params['hue'],-100,100);
-  params['saturation'] = validateNum(req.query.saturation,params['saturation'],-100,100);
-  params['brightness'] = validateNum(req.query.brightness,params['brightness'],-100,100);
-  params['contrast'] = validateNum(req.query.contrast,params['contrast'],-100,100);
-  params['glitch'] = validateNum(req.query.glitch,params['glitch'],0,100);
-  params['pixelation'] = validateNum(req.query.pixelation,params['pixelation'],0,100);
-  params['isSquare'] = validateBool(req.query.isSquare,params['isSquare']);
-  params['isPixelated'] = validateBool(req.query.isPixelated,params['isPixelated']);
-  params['isPixelated'] = params['isPixelated'] && params['pixelation']>0;
-
-  getImageData(url,file,params).then(data => res.json(data));
-});
-
-app.listen(port, () => console.log("App is running on port " + port));
+const getGradientBackgroundStyle = palette => (
+  {
+    'background':
+    'linear-gradient(90deg, '+
+    'rgb('+palette[0].join(',')+') 0%, '+
+    'rgb('+palette[1].join(',')+') 25%, '+
+    'rgb('+palette[2].join(',')+') 75%, '+
+    'rgb('+palette[3].join(',')+') 100%)'
+  }
+);
