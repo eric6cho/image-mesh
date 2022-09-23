@@ -41,9 +41,13 @@ app.get(SERVERAPI+'/get/image/pixelate',(req,res) =>
   // getImageData(req,isDefaultParams,isPixelated,isMesh,isGradient)
   getImageData(req,true,true,false,false).then(data => res.json(data)));
 
-app.get(SERVERAPI+'/get/image/edited',(req,res) =>
+app.get(SERVERAPI+'/get/image/edit',(req,res) =>
   // getImageData(req,isDefaultParams,isPixelated,isMesh,isGradient)
   getImageData(req,false,false,false,false).then(data => res.json(data)));
+
+app.get(SERVERAPI+'/get/image/quickEdit',(req,res) =>
+  // getQuickEditImageData(req)
+  getQuickEditImageData(req).then(data => res.json(data)));
 
 app.get(SERVERAPI+'/get/image/pixelMesh',(req,res) =>
   // getImageData(req,isDefaultParams,isPixelated,isMesh,isGradient)
@@ -106,6 +110,38 @@ const getImageData = async (req,isDefaultParams,isPixelated,isMesh,isGradient) =
       data['params'] = params; // add params to data object
 
       resolve(data); // return data object
+    });
+  });
+});
+
+const getQuickEditImageData = async (req) => new Promise(resolve => {
+  let url = validateURL(req.query.url); // check if url is empty
+  let file = getRandomFileName(); // generate random filename with format: yyyy-mm-dd-minutes-8charstr.png
+  let params = getParams(); // set all filtering params to 0 by default
+   
+  if(!url) resolve({'message':'url is not valid'}); // return if url is not valid
+  
+  getImageFromURL(url).then(image => { // return jimp image from url
+    clearOldFiles();                   // clear files older than 10 minutes
+
+    let imageFile = 'public/'+file;    // image path on server
+    let imageURL = HOST+'/'+file;      // image url by host
+    let w = image.bitmap.width;        // image width
+    let h = image.bitmap.height;       // image height
+    let sqSide = Math.min(w,h);        // get smaller side of image
+
+    image.crop((w-sqSide)/2,(h-sqSide)/2,sqSide,sqSide); // crop to square
+    image.resize(256,256,Jimp.RESIZE_BEZIER)             // resize image to new dimensions
+    image.color([{apply:'hue', params: [5]}]);           // change hues of colors
+    image.color([{apply:'saturate', params: [20]}]);     // de/saturate colors
+    image.contrast(-0.2);                                // change contrast
+    image.pixelate(16);                                  // pixelate image
+    image.write(imageFile);                              // save edited image
+    
+    getPaletteData(imageURL).then(data=>{ // get palette of edited image from imageurl on host
+      data['src'] = imageURL;             // add src to data object
+      data['params'] = params;            // add params to data object
+      resolve(data);                      // return data object
     });
   });
 });
