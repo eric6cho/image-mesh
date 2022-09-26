@@ -2,8 +2,8 @@
 
 An image editor api that takes images as an input and can generate the following:
 - a square cropped image
-- an edited photo
-- a pixel art version of the photo
+- an edited image
+- a pixel art version of the image
 - a randomly generated pixel map of an image's color palette
 - a randomly generated gradient of an image's color palette
 - rgb values of an image's color palette
